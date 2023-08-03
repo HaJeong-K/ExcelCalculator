@@ -65,18 +65,29 @@ def login(request):
     loginPW = request.POST['loginPW']
     user = User.objects.get(user_email=loginEmail)
 
+
+    try:
+        user =User.objects.get(user_email=loginEmail)
+    except:
+        return redirect("main_loginFail")
+    
     # 회원가입시 입력한 패스워드와 입력한 패스워드가 같은지 확인
     if user.user_password == loginPW:
+        print("매칭 성공")
         request.session['user_name'] = user.user_name # 사용자가 회원가입 시, 입력한 정보
         request.session['user_email'] = user.user_email # 사용자가 회원가입 시, 입력한 정보
         return redirect('main_index')
     
     else:
         # 로그인 실패, 정보가 다름
-        return redirect("main_loinFail")
+        print("매칭 실패")
+        return redirect("main_loginFail")
 
     # return None
     #None으로 표시를 해도 오류 안남, HttpResponse("확인문구")로 해도 됨 상관없음
+
+def loginFail(request):
+    return render(request, 'main/loginFail.html')
 
 def verifyCode(request):
     return render(request, "main/verifyCode.html")
@@ -117,7 +128,18 @@ def verify(request):
 
 def result(request):
     if 'user_name' in request.session.keys():
-        return render(request, 'main/result.html') # 사용자의 세션 정보가 담겨져 있는 상태에서의 index.html
+        # 현재 상황은 user_name, user_email 정보가 존재
+        # calculate 두개의 정보가 들어있음
+        content = {}
+        # 새로운 객체에 저장
+        content['grade_calculate_dic'] = request.session['grade_calculate_dic']
+        content['email_domain_dic'] = request.session['email_domain_dic']
+
+        # 기존 세션 삭제
+        del request.session['grade_calculate_dic']
+        del request.session['email_domain_dic']
+
+        return render(request, 'main/result.html', content) # 사용자의 세션 정보가 담겨져 있는 상태에서의 index.html
     else:
         return redirect("main_signin")
     
