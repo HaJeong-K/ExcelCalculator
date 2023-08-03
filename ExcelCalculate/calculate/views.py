@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import HttpResponse
 import pandas as pd
 
@@ -63,8 +63,24 @@ def calculate(request):
     print("## Email 도메인별 사용 인원")
     for key in email_domain_dic.keys():
         print("#", key, ": ", email_domain_dic[key], "명")
+
+
+    # 세션 각각의 값을 입력받음
+    # pandas와 django 데이터 타입이 다름
+    # pandas의 데이터 타입 >> 파이썬 기본 데이터 타입으로 변환
+
+    grade_calculate_dic_to_session = {}
+    for key in grade_list:
+        grade_calculate_dic_to_session[int(key)] = {}
+        grade_calculate_dic_to_session[int(key)]['max'] = float(grade_calculate_dic[key]['max']) #float 자료형으로 변환
+        grade_calculate_dic_to_session[int(key)]['min'] = float(grade_calculate_dic[key]['min']) #float 자료형으로 변환
+        grade_calculate_dic_to_session[int(key)]['avg'] = float(grade_calculate_dic[key]['avg']) #float 자료형으로 변환
+
+    request.session['grade_calculate_dic'] = grade_calculate_dic_to_session
+    request.session['email_domain_dic'] = email_domain_dic
+
     
-    '''
+    
     # pandas 문법으로 변환해서 2개 Tasks 완료하기
     
     grade_df = df.groupby('grade')['value'].agg(["min", "max", "mean"]).reset_index().rename(columns = {"mean" : "avg"})
@@ -73,6 +89,6 @@ def calculate(request):
     df['domain'] = df['email'].apply(lambda x : x.split("@")[1])
     email_df = df.groupby('domain')['value'].agg("count").sort_values(ascending=False).reset_index()
     print(email_df)
-    '''
+    
 
-    return HttpResponse("calculate, calculate function!")
+    return redirect("/result")
